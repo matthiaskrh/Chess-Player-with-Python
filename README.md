@@ -10,3 +10,8 @@ Human controlled - When asked for a move prompts player input
 Random - Randomly selected move from list of legal moves
 
 Minimax - Uses a limited depth minimax search with alpha-beta pruning to get optimal move
+
+
+## Dependency
+
+python-chess https://pypi.org/project/python-chess/
