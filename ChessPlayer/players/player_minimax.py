@@ -1,4 +1,6 @@
 from chess_player import PlayerBase
+from enum import Enum
+
 import chess_manager
 import chess
 import random
@@ -9,29 +11,72 @@ class PlayerMinimax(PlayerBase):
     """
     Player that searches a minimax tree of limited depth for the best possible move to make.
     """
-    def __init__(self, max_depth, is_debug=False):
+
+
+    def __init__(self,
+                 max_depth,
+                 ab_prune=True,
+                 score_piece_position=False,
+                 score_piece_attackers=False,
+                 score_piece_attacks=False,
+                 print_move_info=False):
+
+        """
+        :param max_depth: Max recursion depth to search
+        :type max_depth: int
+
+        :param ab_prune: Enables alpha-beta pruning of the game tree to reduce move times
+        :type ab_prune: bool
+
+        :param score_piece_position: Factors in position up the board when scoring piece
+        (friendly pieces farther up the board are more valuable)
+        :type score_piece_position: bool
+
+        :param score_piece_attackers: Factors in the amount of attacking pieces when scoring piece
+        (friendly pieces with more enemy pieces attacking it are less valuable)
+        :type score_piece_attackers: bool
+
+        :param score_piece_attacks: Factors in the amount of pieces one is attacking when scoring piece
+        (friendly pieces that are attacking more enemy pieces are more valuable)
+        :type sscore_attacks: bool
+
+        :param print_move_info: Print info about chosen move (time, move type, etc.)
+        :type print_move_info: bool
+        """
+
+        # Game tree
         self.max_depth = max_depth
-        self.is_debug = is_debug
+        self.ab_prune = ab_prune
+
+        # Scoring heuristic
+        self.score_position = score_piece_position
+        self.score_attackers = score_piece_attackers
+        self.score_attacks = score_piece_attacks
+
+        # Debug
+        self.print_move_info = print_move_info
 
 
     def get_move(self):
-
         init_time = time.time()
 
         # Create a test board seperate from real board to minimax search on
         test_board = self.board.copy()
 
-        best_score, best_move = self.score_tree_with_ab(test_board, float("-inf"), float("inf"), 0)
-        #best_score, best_move = self.score_tree(test_board, 0)
+        # Initial recursive call
+        if self.ab_prune:
+            best_score, best_move = self.score_tree_with_ab(test_board, float("-inf"), float("inf"), 0)
+        else:
+            best_score, best_move = self.score_tree(test_board, 0)
 
-        if self.is_debug:
+        # Debug print out
+        if self.print_move_info:
             print("Took "
                   + str(time.time() - init_time)
                   + " to get move "
                   + str(best_move)
                   + " with score "
                   + str(best_score))
-
 
         return best_move
 
@@ -205,6 +250,7 @@ class PlayerMinimax(PlayerBase):
 
 
         return (node_score, score_to_move[node_score])
+
 
 
     def get_piece_score(self, piece):

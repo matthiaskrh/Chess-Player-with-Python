@@ -6,7 +6,6 @@ from players import player_human, player_minimax, player_random
 COLOR_TO_STRING = {chess.WHITE : "White", chess.BLACK : "Black"}
 
 
-
 class ChessManager:
     def __init__(self, white_player, black_player):
         self.board = chess.Board()
@@ -52,7 +51,7 @@ class ChessManager:
             self.board.push(move)
 
             if self.board.is_game_over():
-                print(self.board.result())
+                print("\nGame finished with final score: " + self.board.result())
                 break
 
             turn = not turn
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     #w = player_human.PlayerHuman()
     #b = player_human.PlayerHuman()
 
-    b = player_minimax.PlayerMinimax(2, is_debug=True)
+    b = player_minimax.PlayerMinimax(2, print_move_info=True)
     w = player_random.PlayerRandom()
 
     cm = ChessManager(w, b)
