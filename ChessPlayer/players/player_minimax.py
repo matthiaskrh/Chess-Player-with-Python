@@ -65,9 +65,9 @@ class PlayerMinimax(PlayerBase):
 
         # Initial recursive call
         if self.ab_prune:
-            best_score, best_move = self.score_tree_with_ab(test_board, float("-inf"), float("inf"), 0)
+            best_score, best_move = self._score_tree_with_ab(test_board, float("-inf"), float("inf"), 0)
         else:
-            best_score, best_move = self.score_tree(test_board, 0)
+            best_score, best_move = self._score_tree(test_board, 0)
 
         # Debug print out
         if self.print_move_info:
@@ -81,7 +81,7 @@ class PlayerMinimax(PlayerBase):
         return best_move
 
 
-    def score_tree_with_ab(self, board, a, b, depth):
+    def _score_tree_with_ab(self, board, a, b, depth):
         """ Recusive function that depth searches the game tree of a chess board and uses alpha beta pruning
 
         :param board: board on which to depth search on
@@ -102,7 +102,7 @@ class PlayerMinimax(PlayerBase):
 
         # Recursion limit
         if depth >= self.max_depth:
-            return self.get_board_score(board), None
+            return self._get_board_score(board), None
 
         # Check if game is over
         if board.is_game_over():
@@ -136,9 +136,9 @@ class PlayerMinimax(PlayerBase):
 
             for i in legal_moves:
                 board.push(i)
-                r = self.score_tree_with_ab(board, a, b, depth + 1)
+                r = self._score_tree_with_ab(board, a, b, depth + 1)
 
-                if r[0] > value:
+                if r[0] >= value:
                     value = r[0]
                     move = i
 
@@ -159,9 +159,9 @@ class PlayerMinimax(PlayerBase):
 
             for i in legal_moves:
                 board.push(i)
-                r = self.score_tree_with_ab(board, a, b, depth + 1)
+                r = self._score_tree_with_ab(board, a, b, depth + 1)
 
-                if r[0] < value:
+                if r[0] <= value:
                     value = r[0]
                     move = i
 
@@ -176,7 +176,7 @@ class PlayerMinimax(PlayerBase):
             return (value, move)
 
 
-    def score_tree(self, board, depth):
+    def _score_tree(self, board, depth):
         """ Recusive function that depth searches the game tree of a chess board.
 
         :param board: board on which to depth search on
@@ -191,7 +191,7 @@ class PlayerMinimax(PlayerBase):
 
         # Recursion limit
         if depth >= self.max_depth:
-            return self.get_board_score(board), None
+            return self._get_board_score(board), None
 
         # Check if game is over
         if board.is_game_over():
@@ -225,7 +225,7 @@ class PlayerMinimax(PlayerBase):
         for i in legal_moves:
             board.push(i)
 
-            r = self.score_tree(board, depth + 1)
+            r = self._score_tree(board, depth + 1)
             child_scores.append(r[0])
             score_to_move[r[0]] = i
 
@@ -252,8 +252,7 @@ class PlayerMinimax(PlayerBase):
         return (node_score, score_to_move[node_score])
 
 
-
-    def get_piece_score(self, piece):
+    def _get_piece_score(self, board, piece, square):
         """
         Calculates score of a single piece based on its position on the board, how many attackers it has, how many
         pieces its attacking, and its type.
@@ -266,23 +265,32 @@ class PlayerMinimax(PlayerBase):
         """
 
         if piece.color == self.color:
+            base_score = 0
             if piece.piece_type == chess.PAWN:
-                return 1
+                base_score = 1
             if piece.piece_type == chess.KNIGHT:
-                return 3
+                base_score = 3
             if piece.piece_type == chess.BISHOP:
-                return 3
+                base_score = 3
             if piece.piece_type == chess.ROOK:
-                return 5
+                base_score = 5
             if piece.piece_type == chess.QUEEN:
-                return 9
+                base_score = 9
             if piece.piece_type == chess.KING:
-                return 0
+                base_score = 0 # King will always be alive when function is called
+
+            if self.score_position:
+                if self.color == chess.WHITE:
+                    dist_from_side = chess.square_rank(square) + 1
+                else:
+                    dist_from_side = 8 - chess.square_rank(square)
+                base_score *= dist_from_side
+            return base_score
         else:
             return 0
 
 
-    def get_board_score(self, board):
+    def _get_board_score(self, board):
         """
         Sums up score of all pieces on the board and returns that value.
 
@@ -296,7 +304,7 @@ class PlayerMinimax(PlayerBase):
         score = 0
         pieces = board.piece_map()
         for i in pieces.keys():
-            score += self.get_piece_score(pieces[i])
+            score += self._get_piece_score(board, pieces[i], i)
         return score
 
 
